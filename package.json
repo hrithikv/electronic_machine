@@ -1,0 +1,19 @@
+{
+  {
+  "name": "cleared",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test provided\" 
+    && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "noble": "^1.9.2",
+    "node-bluetooth": "^1.2.0",
+    "node-gyp": "^3.1.0",
+    "request": "^2.8.0"
+  }
+}
