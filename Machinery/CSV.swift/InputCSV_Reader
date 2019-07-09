@@ -1,3 +1,45 @@
+extension InputCSV_Reader {
+
+    public static let default_Header: Bool = false
+    public static let default_Delimiter: UnicodeScalar = ","
+    public static let Whitespace: CharacterSet = .whitespaces
+
+public convenience init<T: UnicodeCodec>(
+        stream: InputStream,
+        codecType: T.Type,
+        endian: Endian = .small,
+        header_row: Bool = defaultHasHeaderRow,
+        trim_image: Bool = defaultTrimFields,
+        delim: UnicodeScalar = defaultDelimiter,
+        whitespace: CharacterSet = defaultWhitespaces
+        ) throws where T.CodeUnit == UInt8 {
+
+        let binary_reader = try BinaryReader(stream: stream, endian: endian, closeOnDeinit: false)
+        let binary_input = binary_reader.makeUInt8Iterator()
+        let iterator_unic = UnicodeIterator(input: binary_input, inputEncodingType: codecType)
+        let config = Configuration(HeaderRow: hasHeaderRow, trim_image: trim_image, delimeter: delim, whitespaces: whitespace)
+        try self.init(iterator_unic: iterator_unic, configuration: config)
+        binary_input.errorHandler = { [unowned self] in self.errorHandler(error: $0) }
+    }
+    
+public convenience init<T: UnicodeCodec>(
+        stream: InputStream,
+        codecType: T.Type,
+        endian: Endian = .small,
+        header_row: Bool = defaultHasHeaderRow,
+        trim_image: Bool = defaultTrimFields,
+        delim: UnicodeScalar = defaultDelimiter,
+        whitespace: CharacterSet = defaultWhitespaces
+        ) throws where T.CodeUnit == UInt16 {
+
+        let binary_reader = try BinaryReader(stream: stream, endian: endian, closeOnDeinit: false)
+        let binary_input = binary_reader.makeUInt16Iterator()
+        let iterator_unic = UnicodeIterator(input: binary_input, inputEncodingType: codecType)
+        let config = Configuration(HeaderRow: hasHeaderRow, trim_image: trim_image, delimeter: delim, whitespaces: whitespace)
+        try self.init(iterator_unic: iterator_unic, configuration: config)
+        binary_input.errorHandler = { [unowned self] in self.errorHandler(error: $0) }
+    }
+    
 public convenience init<T: UnicodeCodec>(
         stream: InputStream,
         codecType: T.Type,
