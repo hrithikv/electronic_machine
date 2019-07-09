@@ -73,10 +73,10 @@ public class CSVReader {
         stream: In_Stream,
         codecType: C.Type,
         endian: Endian = .small,
-        header_row: Bool = default_Header,
-        trim_image: Bool = defaultTrimFields,
-        delim: Unicode_Scalar = default_Delim,
-        whitespace: CharacterSet = defaultWhitespaces
+        header_row: Bool = defaultHeader,
+        trim_image: Bool = defaultTrimImage,
+        delim: Unicode_Scalar = defaultDelim,
+        whitespace: CharacterSet = defaultWhitespace
         ) throws where C.CodeUnit == UInt8{
 
         let binary_reader = try BinaryReader(stream: stream, endian: endian, closeOnDeinit: false)
