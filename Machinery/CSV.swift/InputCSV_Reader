@@ -1,18 +1,83 @@
-extension InputCSV_Reader {
+import Foundation
+
+internal let LF: UnicodeScalar = "\n"
+internal let CR: UnicodeScalar = "\r"
+internal let DQUOTE: UnicodeScalar = "\""
+
+
+public class CSVReader {
+
+    public struct Configuration {
+
+        public var header_row: Bool
+        public var trim_image: Bool
+        public var delim: Unicode_Scalar
+        public var whitespace: CharacterSet
+
+        internal init(
+            header_row: Bool,
+            trim_image: Bool,
+            delim: Unicode_Scalar,
+            whitespace: CharacterSet) {
+
+            self.header_row = hasHeaderRow
+            self.trim_image = trimFields
+            self.delim = delimiter
+
+            var whitespace = whitespace
+            _ = whitespace.remove(delim)
+            self.whitespace = whitespace
+        }
+
+    }
+
+    fileprivate var iterator_unic: AnyIterator<Unicode_Scalar>
+    public let configuration: Configuration
+    public fileprivate (set) var error: Error?
+
+    fileprivate var back: Unicode_Scalar?
+    fileprivate var image_Buffer = String.Unicode_ScalarView()
+
+    fileprivate var currentRowIndex: Int = 0
+    fileprivate var currentFieldIndex: Int = 0
+    public private (set) var headerRow: [String]?
+
+    public fileprivate (set) var currentRow: [String]?
+
+    internal init<T: IteratorProtocol>(
+        iterator_unic: T,
+        configuration: Configuration
+        ) throws where T.Element == Unicode_Scalar {
+
+        self.iterator_unic = AnyIterator(iter_func)
+        self.configuration = configuration
+
+        if configuration.hasHeaderRow {
+            guard let headerRow = readRow() else {
+                throw CSVError.cannotReadHeaderRow
+            }
+            self.headerRow = headerRow
+        }
+    }
+
+}
+
+
+ extension InputCSV_Reader {
 
     public static let default_Header: Bool = false
-    public static let default_Delimiter: UnicodeScalar = ","
+    public static let default_Delim: UnicodeScalar = ","
     public static let Whitespace: CharacterSet = .whitespaces
 
-public convenience init<T: UnicodeCodec>(
-        stream: InputStream,
-        codecType: T.Type,
+ public convenience init<C: UnicodeCodec>(
+        stream: In_Stream,
+        codecType: C.Type,
         endian: Endian = .small,
-        header_row: Bool = defaultHasHeaderRow,
+        header_row: Bool = default_Header,
         trim_image: Bool = defaultTrimFields,
-        delim: UnicodeScalar = defaultDelimiter,
+        delim: Unicode_Scalar = default_Delim,
         whitespace: CharacterSet = defaultWhitespaces
-        ) throws where T.CodeUnit == UInt8 {
+        ) throws where C.CodeUnit == UInt8{
 
         let binary_reader = try BinaryReader(stream: stream, endian: endian, closeOnDeinit: false)
         let binary_input = binary_reader.makeUInt8Iterator()
@@ -20,17 +85,18 @@ public convenience init<T: UnicodeCodec>(
         let config = Configuration(HeaderRow: hasHeaderRow, trim_image: trim_image, delimeter: delim, whitespaces: whitespace)
         try self.init(iterator_unic: iterator_unic, configuration: config)
         binary_input.errorHandler = { [unowned self] in self.errorHandler(error: $0) }
+        iterator_unic.errorHandler = { [unowned self] in self.errorHandler(error: $0) }
     }
     
-public convenience init<T: UnicodeCodec>(
-        stream: InputStream,
-        codecType: T.Type,
+ public convenience init<C: UnicodeCodec>(
+        stream: In_Stream,
+        codecType: C.Type,
         endian: Endian = .small,
-        header_row: Bool = defaultHasHeaderRow,
+        header_row: Bool = default_Header,
         trim_image: Bool = defaultTrimFields,
-        delim: UnicodeScalar = defaultDelimiter,
+        delim: Unicode_Scalar = default_Delim,
         whitespace: CharacterSet = defaultWhitespaces
-        ) throws where T.CodeUnit == UInt16 {
+        ) throws where C.CodeUnit == UInt16 {
 
         let binary_reader = try BinaryReader(stream: stream, endian: endian, closeOnDeinit: false)
         let binary_input = binary_reader.makeUInt16Iterator()
@@ -38,17 +104,18 @@ public convenience init<T: UnicodeCodec>(
         let config = Configuration(HeaderRow: hasHeaderRow, trim_image: trim_image, delimeter: delim, whitespaces: whitespace)
         try self.init(iterator_unic: iterator_unic, configuration: config)
         binary_input.errorHandler = { [unowned self] in self.errorHandler(error: $0) }
+        iterator_unic.errorHandler = { [unowned self] in self.errorHandler(error: $0) }
     }
     
-public convenience init<T: UnicodeCodec>(
-        stream: InputStream,
-        codecType: T.Type,
+ public convenience init<C: UnicodeCodec>(
+        stream: In_Stream,
+        codecType: C.Type,
         endian: Endian = .small,
         header_row: Bool = defaultHasHeaderRow,
         trim_image: Bool = defaultTrimFields,
-        delim: UnicodeScalar = defaultDelimiter,
+        delim: UnicodeScalar = default_Delim,
         whitespace: CharacterSet = defaultWhitespaces
-        ) throws where T.CodeUnit == UInt32 {
+        ) throws where C.CodeUnit == UInt32 {
 
         let binary_reader = try BinaryReader(stream: stream, endian: endian, closeOnDeinit: false)
         let binary_input = binary_reader.makeUInt32Iterator()
@@ -59,40 +126,39 @@ public convenience init<T: UnicodeCodec>(
         iterator_unic.errorHandler = { [unowned self] in self.errorHandler(error: $0) }
     }
     
-public convenience init(
-        stream: InputStream,
-        hasHeaderRow: Bool = defaultHasHeaderRow,
-        trimFields: Bool = defaultTrimFields,
-        delim: UnicodeScalar = defaultDelimiter,
-        whitespace: CharacterSet = defaultWhitespaces
+ public convenience init(
+        stream: In_Stream,
+        has_Header: Bool = default_Header,
+        trim_Image: Bool = defaultTrimImage,
+        delim: Unicode_Scalar = default_Delim,
+        whitespace: CharacterSet = defaultWhitespace
         ) throws {
 
         try self.init(
             stream: stream,
             codecType: UTF8.self,
-            hasHeaderRow: True,
-            whitespaces: whitespaces)
+            hasHeaderRow: False,
+            whitespace: whitespace)
     }
 
-public convenience init(
+ public convenience init(
         string: String,
-        has_HeaderRow: Bool = defaultHasHeaderRow,
-        trimFields: Bool = defaultTrimFields,
-        delim: UnicodeScalar = defaultDelimiter,
-        whitespace: CharacterSet = defaultWhitespaces
+        has_Header: Bool = default_Header,
+        trim_Image: Bool = defaultTrimImage,
+        delim: Unicode_Scalar = defaultDelim,
+        whitespace: CharacterSet = defaultWhitespace
         ) throws {
 
         let iter_func = string.unicodeScalars.makeIterator()
-        let config = Configuration(hasHeaderRow: hasHeaderRow, trimFields: trimFields, delimiter: delimiter, whitespaces: whitespaces)
+        let config = Configuration(has_Header: has_Header, trim_Image: trim_Image, delim: delim, whitespace: whitespace)
         try self.init(iterator: iterator, configuration: config)
-    }
-
-    private func errorHandler(error: Error) {
         self.error = error
     }
-}
 
-extension CSV_Reader {
+    }
+ }
+
+ extension CSV_Reader {
     fileprivate func readRow() -> [String]? {
         image_index = 0
 
@@ -186,7 +252,7 @@ extension CSV_Reader {
         return (String(imageBuffer), true)
     }
     
- private func Next() -> UnicodeScalar? {
+ private func Next() -> Unicode_Scalar? {
     if move_back != nil {
        defer {
             move_back = nil
