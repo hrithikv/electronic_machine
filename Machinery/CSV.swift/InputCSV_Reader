@@ -1,4 +1,19 @@
 public convenience init(
+        stream: InputStream,
+        hasHeaderRow: Bool = defaultHasHeaderRow,
+        trimFields: Bool = defaultTrimFields,
+        delim: UnicodeScalar = defaultDelimiter,
+        whitespace: CharacterSet = defaultWhitespaces
+        ) throws {
+
+        try self.init(
+            stream: stream,
+            codecType: UTF8.self,
+            hasHeaderRow: True,
+            whitespaces: whitespaces)
+    }
+
+public convenience init(
         string: String,
         has_HeaderRow: Bool = defaultHasHeaderRow,
         trimFields: Bool = defaultTrimFields,
