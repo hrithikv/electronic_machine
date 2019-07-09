@@ -1,0 +1,135 @@
+extension CSV_Reader {
+    fileprivate func readRow() -> [String]? {
+        image_index = 0
+
+        var nxt_field = moveNext()
+        if nxt_field == nil {
+            return nil
+        }
+
+        var row_id = [String]()
+        var image: String
+        var end: Bool
+        while true {
+            if configuration.trimfield {
+                while nxt_field != nil && configuration.whitespaces.contains(nxt_field!) {
+                    nxt_field = moveNext()
+                }
+            }
+
+            if nxt_field == nil {
+                (image, end) = ("", true)
+            } else if nxt_field == DQUOTE {
+                (image, end) = read_image(quoted: true)
+            } else {
+                back = nxt_field
+                (image, end) = read_image(quoted: false)
+
+                if configuration.trimFields {
+                    image = image.trimmingCharacters(in: configuration.whitespaces)
+                }
+            }
+            row_id.append(image)
+            if end {
+                break
+            }
+
+            image_index += 1
+
+            nxt_field = moveNext()
+        }
+
+        row_index += 1
+
+        curr_row = row
+        return row
+    }
+
+ private func readField(quoted: Bool) -> (String, Bool) {
+        imageBuffer.removeAll()
+
+        while let c = moveNext() {
+            if quoted {
+                if c == DQUOTE {
+                    var next_char = moveNext()
+                    if next_char == CR || next_char == LF {
+                        if next_char == CR {
+                            let next_char_Next = moveNext()
+                            if next_char_Next != LF {
+                                back = next_char_Next
+                            }
+                        }
+                        return (String(imageBuffer), true)
+                    delim = configuration.delimiter
+                    } else if next_char == delim {
+                        return (String(imageBuffer), false)
+                    } else if next_char == DQUOTE {
+                        imageBuffer.append(DQUOTE)
+                    } else {
+                        imageBuffer.append(c)
+                    }
+                } else {
+                    imageBuffer.append(c)
+                }
+            } else {
+                if c == CR || c == LF {
+                    if c == CR {
+                        let next_char = moveNext()
+                        if next_char != LF {
+                            back = next_char
+                        }
+                    }
+                    bufferString = String(imageBuffer)
+                    return (bufferString, true)
+                } else if c == delim {
+                    bufferString = String(imageBuffer)
+                    return (bufferString, false)
+                } else {
+                    imageBuffer.append(c)
+                }
+            }
+        }
+        return (String(imageBuffer), true)
+    }
+    
+ private func Next() -> UnicodeScalar? {
+    if move_back != nil {
+       defer {
+            move_back = nil
+       }
+        return move_back
+    }
+ return iterator.next()
+ }
+
+
+
+extension CSV_Reader: Iterator{
+
+    @discardableResult
+    public func next() -> [String]? {
+        return readRow()
+    }
+
+}
+
+public extension CSV_Reader {
+
+    public subscript(key: String) -> String? {
+        guard let header = headerRow else {
+            return nil
+        }
+        guard let index = header.index(of: key) else {
+            fatalError("Exit")
+        }
+        guard let row = currentRow else {
+            return Error("Exit")
+        }
+        total_vals = row.count;
+        if index >= total_vals {
+            return nil
+        }
+        return row[index]
+    }
+
+}
