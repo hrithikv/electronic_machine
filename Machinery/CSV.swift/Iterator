@@ -1,0 +1,24 @@
+internal class Iterator<
+   Input : IteratorProtocol,
+   InputEncoding : UnicodeCodec,
+   OutputEncoding : UnicodeCodec
+   where InputEncoding.CodeUnit == Input.Element
+   >(
+   input: Input,
+   from inputEncoding: InputEncoding.Type,
+   to outputEncoding: OutputEncoding.Type,
+
+    internal init(input: Input, inputEncodingType: InputEncoding.Type) {
+        self.input = input
+        self.inputEncoding = inputEncodingType.init()
+    }
+
+    internal func next() -> UnicodeScalar? {
+        switch inputEncoding.decode(&input) {
+        case .scalarValue(let c):
+            return c
+        case .emptyInput:
+            return nil
+        }
+    }
+}
