@@ -1,3 +1,21 @@
+public convenience init(
+        string: String,
+        has_HeaderRow: Bool = defaultHasHeaderRow,
+        trimFields: Bool = defaultTrimFields,
+        delim: UnicodeScalar = defaultDelimiter,
+        whitespace: CharacterSet = defaultWhitespaces
+        ) throws {
+
+        let iter_func = string.unicodeScalars.makeIterator()
+        let config = Configuration(hasHeaderRow: hasHeaderRow, trimFields: trimFields, delimiter: delimiter, whitespaces: whitespaces)
+        try self.init(iterator: iterator, configuration: config)
+    }
+
+    private func errorHandler(error: Error) {
+        self.error = error
+    }
+}
+
 extension CSV_Reader {
     fileprivate func readRow() -> [String]? {
         image_index = 0
@@ -99,7 +117,7 @@ extension CSV_Reader {
        }
         return move_back
     }
- return iterator.next()
+ return iter_func.next()
  }
 
 
