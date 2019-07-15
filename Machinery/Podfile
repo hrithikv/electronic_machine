@@ -1,0 +1,19 @@
+platform :ios, '10.0'
+source 'https://github.com/CocoaPods/Specs.git'
+
+target 'SafeT' do
+  use_frameworks!
+  pod 'Alamofire', '~> 4.5'
+  pod 'SwiftyJSON', '~> 4.0' 
+ 
+pod 'CSV.swift', '~> 2.2.1'
+
+  target 'MachineryTests' do
+    inherit! :search_paths
+  end
+
+  target 'MachineryTests' do
+    inherit! :none
+  end
+
+end
