@@ -1,0 +1,6 @@
+framework module Pods-electronic_machine {
+  umbrella header "Pods-electronic_machine-umbrella.h"
+
+  export *
+  module * { export * }
+}
