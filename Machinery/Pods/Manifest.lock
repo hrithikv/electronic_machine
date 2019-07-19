@@ -1,0 +1,17 @@
+PODS:
+  - electronic_machine (0.10.0)
+
+DEPENDENCIES:
+  - electronic_machine (from `https://github.com/hrithikv/electronic_machine.git`, branch `swift4`)
+
+CHECKOUT OPTIONS:
+  electronic_machine:
+    :commit: 9207f9ec0e84d56eed117b37a99b78217c78fe2
+    :git: https://github.com/hrithikv/electronic_machine.git
+
+SPEC CHECKSUMS:
+  Nocilla: c31f714d1f0a24a652c430e99a1283908ed9c1d7
+
+PODFILE CHECKSUM: e1701972032ff803969f823722d8e4aa8929f692
+
+COCOAPODS: 1.7.0
